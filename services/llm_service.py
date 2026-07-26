@@ -25,9 +25,9 @@ class LLMService:
         # print("=" * 60)
         # print("TOOLS")
         # print(tools)
-        print("=" * 80)
-        print(json.dumps(tools, indent=2))
-        print("=" * 80)
+        # print("=" * 80)
+        # print(json.dumps(tools, indent=2))
+        # print("=" * 80)
         return self.client.chat.completions.create(
             model=MODEL,
             messages=messages,

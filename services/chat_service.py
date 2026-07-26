@@ -56,6 +56,7 @@ class ChatService:
             EMPLOYEE_TOOLS
         )
         message = response.choices[0].message
+        print("LLM Response:", message.content)
     # --------------------------------------------------
     # CASE 1 : No tool required
     # --------------------------------------------------
@@ -133,10 +134,13 @@ class ChatService:
         # else:
         #     tools = None
         tools = self.tool_router.get_tools(question)
-        print("Tools:", tools)
         response = self.llm_service.first_call(messages, tools)
         assistant_message = response.choices[0].message
         final_answer = ""
+        print("=" * 50)
+        print("Assistant Content:", assistant_message.content)
+        print("Tool Calls:", assistant_message.tool_calls)
+        print("=" * 50)
         # --------------------------------------------------
     # CASE 1 : No tool required
     # --------------------------------------------------
@@ -153,6 +157,7 @@ class ChatService:
         # this is for single tool routing, if you want to route to multiple tools then you can use the below code
             # tool_call = assistant_message.tool_calls[0]
        # this code is for multiple tool routing, if you want to route to single tool then you can use the above code
+            print("Reached CASE 2")
             messages.append(assistant_message)
             for tool_call in assistant_message.tool_calls:
                 raw_arguments = tool_call.function.arguments
@@ -170,7 +175,7 @@ class ChatService:
                     print("Final Arguments:", arguments)
 
                 tool_result = self.tool_executor.execute(tool_call.function.name, arguments)
-                # print("Tool Result:", tool_result)
+                print("Tool Result:", tool_result)
                 # messages.append(assistant_message)
                 messages.append(
                 {

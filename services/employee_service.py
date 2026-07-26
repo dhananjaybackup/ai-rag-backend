@@ -15,7 +15,7 @@ class EmployeeService:
         )
         row = cursor.fetchone()
         conn.close()
-
+        print(f"Retrieved employee: {row}")
         if row:
             return {
                 "id": row[0],

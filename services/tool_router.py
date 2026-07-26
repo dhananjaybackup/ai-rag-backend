@@ -81,6 +81,7 @@ class ToolRouter:
         
         if any(k in question for k in TEST_KEYWORDS):
             tools.extend(TEST_TOOLS)
-        
+
+        # print("Tools matched:", tools)
         return tools if tools else None
     
