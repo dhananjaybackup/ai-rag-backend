@@ -137,10 +137,10 @@ class ChatService:
         response = self.llm_service.first_call(messages, tools)
         assistant_message = response.choices[0].message
         final_answer = ""
-        print("=" * 50)
-        print("Assistant Content:", assistant_message.content)
-        print("Tool Calls:", assistant_message.tool_calls)
-        print("=" * 50)
+        # print("=" * 50)
+        # print("Assistant Content:", assistant_message.content)
+        # print("Tool Calls:", assistant_message.tool_calls)
+        # print("=" * 50)
         # --------------------------------------------------
     # CASE 1 : No tool required
     # --------------------------------------------------
@@ -206,3 +206,89 @@ class ChatService:
         return {
     "response": final_answer
     }
+
+    def chatAgentLoop(self, request: ChatRequest):
+        messages = [
+            {
+                "role": Role.SYSTEM,
+                "content": SYSTEM_PROMPT
+            }
+        ]
+        history = self.memory_service.get_history(
+                     request.sessionId
+                    )
+        messages.extend(history)
+        messages.append(
+            {
+                "role":Role.USER,
+                "content":request.message
+            }
+        )
+        question = request.message.lower()
+        employee_id = request.employeeId
+
+        print(f"Employee ID: {employee_id}, Question: {question}")
+
+        tools = self.tool_router.get_tools(question)
+        while True:
+
+            response = self.llm_service.first_call(messages, tools)
+            assistant_message = response.choices[0].message
+            final_answer = ""
+            # --------------------------------------------------
+            # CASE 1 : No tool required
+            # --------------------------------------------------
+            if not assistant_message.tool_calls:
+                messages.append({
+                    "role": Role.ASSISTANT,
+                    "content": assistant_message.content
+                })
+                final_answer = assistant_message.content
+                print("No tool required")
+                break
+            else:
+       
+                print("Reached CASE 2")
+                messages.append(assistant_message)
+                for tool_call in assistant_message.tool_calls:
+                    raw_arguments = tool_call.function.arguments
+                    try:
+                        arguments = json.loads(raw_arguments) if raw_arguments else {}
+                    except json.JSONDecodeError:
+                        arguments = {}
+                    arguments = arguments or {}    
+                    print(f"Selected Tool: {tool_call.function.name}")
+                    print(f"Arguments from LLM: {arguments}")
+                    # print("Arguments:", )
+                    if tool_call.function.name in AUTHENTICATED_TOOLS:
+                        arguments["employee_id"] = request.employeeId
+
+                        print("Final Arguments:", arguments)
+
+                    tool_result = self.tool_executor.execute(tool_call.function.name, arguments)
+                    print("Tool Result:", tool_result)
+                # messages.append(assistant_message)
+                    messages.append(
+                    {
+                    "role": Role.TOOL,
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(tool_result)
+                    })
+              
+          
+            # final_answer = response.choices[0].message.content
+
+        self.memory_service.save_message(
+                request.sessionId,
+                Role.USER,
+                request.message
+           )
+
+        self.memory_service.save_message(
+                request.sessionId,
+                Role.ASSISTANT,
+                final_answer
+        )
+        return {
+        "response": final_answer
+        }
