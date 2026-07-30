@@ -3,7 +3,7 @@ import sqlite3
 from sympy import content
 
 from models.employee import Employee
-from services.auth import hash_password
+from services.auth.auth import hash_password
 
 class EmployeeService:
     def get_employee_by_email(self, email: str):

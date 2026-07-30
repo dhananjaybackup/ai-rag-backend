@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from passlib.context import CryptContext
-from services.auth import create_access_token
-from services.employee_service import EmployeeService
+from services.auth.auth import create_access_token
+from services.employee.employee_service import EmployeeService
 
 class AuthService:
     def __init__(self):

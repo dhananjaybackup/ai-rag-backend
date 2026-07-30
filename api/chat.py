@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException
 from models.chat_models import ChatRequest
-from services.chat_service import ChatService
+from services.agent.agent_service import AgentService
 
 router = APIRouter()
-chat_service = ChatService()
+_service = AgentService()
 
 @router.post("/chat")
 async def chat_endpoint(chat_request: ChatRequest):
     print(f"Received chat request: {chat_request.message}")
-    # return chat_service.chat(chat_request)
-    return chat_service.chatAgentLoop(chat_request)
+    # return _service.chat(chat_request)
+    return _service.chatAgentLoop(chat_request)

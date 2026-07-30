@@ -10,11 +10,11 @@ from openai import models
 from models.chat_models import ChatRequest
 from prompts.system_prompt import SYSTEM_PROMPT
 
-from services.llm_service import LLMService
-from services.memory_service import MemoryService
-from services.tool_executor import ToolExecutor
+from services.llm.llm_service import LLMService
+from services.agent.memory_service import MemoryService
+from services.agent.tool_executor import ToolExecutor
 
-from services.tool_router import ToolRouter
+from services.agent.tool_router import ToolRouter
 from tools.employee_tools import get_employee_by_id
 from tools.tool_registry import EMPLOYEE_TOOLS, GRATUITY_POLICY_TOOLS, LEAVE_POLICY_TOOLS
 
@@ -29,7 +29,7 @@ AUTHENTICATED_TOOLS = {
     "get_leave_balance_by_id",
 }
 
-class ChatService:
+class AgentService:
     def __init__(self):
         self.llm_service = LLMService()
         self.tool_executor = ToolExecutor()

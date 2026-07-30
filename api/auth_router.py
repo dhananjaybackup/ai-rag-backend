@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from models.employee import Employee
-from services.auth_service import AuthService
+from services.auth.auth_service import AuthService
 
 router = APIRouter()
 auth_service = AuthService()
