@@ -1,8 +1,16 @@
+# Python
 __pycache__/
 *.pyc
-.venv/
-venv/
-.env
+
+# Logs
+logs/
+*.log
+
+# ChromaDB
+chroma_db/
+
+# VS Code
 .vscode/
-.idea/
-.pytest_cache/
+
+# Environment
+.env

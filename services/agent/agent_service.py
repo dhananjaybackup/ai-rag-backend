@@ -17,6 +17,8 @@ from services.agent.tool_executor import ToolExecutor
 from services.agent.tool_router import ToolRouter
 from tools.employee_tools import get_employee_by_id
 from tools.tool_registry import EMPLOYEE_TOOLS, GRATUITY_POLICY_TOOLS, LEAVE_POLICY_TOOLS
+import logging
+
 
 class Role:
     SYSTEM = "system"
@@ -28,6 +30,7 @@ AUTHENTICATED_TOOLS = {
     "get_employee_by_id",
     "get_leave_balance_by_id",
 }
+loggger = logging.getLogger(__name__)
 
 class AgentService:
     def __init__(self):
@@ -35,6 +38,8 @@ class AgentService:
         self.tool_executor = ToolExecutor()
         self.memory_service = MemoryService()
         self.tool_router = ToolRouter()
+        # logging.basicConfig(level=logging.INFO)
+        loggger.info("Agent service initialized.")
 
     def chat1(self, user_message):
         # Process the request using the LLM service
@@ -122,6 +127,9 @@ class AgentService:
         question = request.message.lower()
         employee_id = request.employeeId
         print(f"Employee ID: {employee_id}, Question: {question}")
+        logger = logging.getLogger(__name__)
+        logger.info(f"Employee ID: {employee_id}, Question: {question}")
+        
         # if "leave policy" in question:
         #     tools = [POLICY_TOOL]
 
@@ -147,6 +155,7 @@ class AgentService:
         if not assistant_message.tool_calls:
             final_answer = assistant_message.content
             print("No tool required")
+            logger.info("No tool required")
         else:
         #  return {
         #     "response": assistant_message.content
@@ -157,7 +166,7 @@ class AgentService:
         # this is for single tool routing, if you want to route to multiple tools then you can use the below code
             # tool_call = assistant_message.tool_calls[0]
        # this code is for multiple tool routing, if you want to route to single tool then you can use the above code
-            print("Reached CASE 2")
+            logger.info("Reached CASE 2")
             messages.append(assistant_message)
             for tool_call in assistant_message.tool_calls:
                 raw_arguments = tool_call.function.arguments
@@ -168,14 +177,20 @@ class AgentService:
                 arguments = arguments or {}    
                 print(f"Selected Tool: {tool_call.function.name}")
                 print(f"Arguments from LLM: {arguments}")
+                logger.info(f"Selected Tool: {tool_call.function.name}")
+                logger.info(f"Arguments from LLM: {arguments}")
+                logger.info(f"Final Arguments: {arguments}")
                 # print("Arguments:", )
                 if tool_call.function.name in AUTHENTICATED_TOOLS:
                     arguments["employee_id"] = request.employeeId
 
                     print("Final Arguments:", arguments)
+                    logger.info(f"Final Arguments: {arguments}")
+
 
                 tool_result = self.tool_executor.execute(tool_call.function.name, arguments)
                 print("Tool Result:", tool_result)
+                logger.info(f"Tool Result: {tool_result}")
                 # messages.append(assistant_message)
                 messages.append(
                 {
@@ -228,6 +243,9 @@ class AgentService:
         employee_id = request.employeeId
 
         print(f"Employee ID: {employee_id}, Question: {question}")
+        logger = logging.getLogger(__name__)
+        logger.info(f"Employee ID: {employee_id}, Question: {question}")
+        
 
         tools = self.tool_router.get_tools(question)
         while True:
@@ -244,11 +262,11 @@ class AgentService:
                     "content": assistant_message.content
                 })
                 final_answer = assistant_message.content
-                print("No tool required")
+                logger.info("No tool required")
                 break
             else:
        
-                print("Reached CASE 2")
+                logger.info("Reached CASE 2")
                 messages.append(assistant_message)
                 for tool_call in assistant_message.tool_calls:
                     raw_arguments = tool_call.function.arguments
@@ -257,16 +275,17 @@ class AgentService:
                     except json.JSONDecodeError:
                         arguments = {}
                     arguments = arguments or {}    
-                    print(f"Selected Tool: {tool_call.function.name}")
-                    print(f"Arguments from LLM: {arguments}")
+                    logger.info(f"Selected Tool: {tool_call.function.name}")
+                    logger.info(f"Arguments from LLM: {arguments}")
                     # print("Arguments:", )
                     if tool_call.function.name in AUTHENTICATED_TOOLS:
                         arguments["employee_id"] = request.employeeId
 
-                        print("Final Arguments:", arguments)
+                        logger.info(f"Final Arguments: {arguments}")
 
                     tool_result = self.tool_executor.execute(tool_call.function.name, arguments)
                     print("Tool Result:", tool_result)
+                    logger.info(f"Tool Result: {tool_result}")
                 # messages.append(assistant_message)
                     messages.append(
                     {

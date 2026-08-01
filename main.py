@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from api.auth_router import router as auth_router
 from api.chat import router as chat_router
 from fastapi.middleware.cors import CORSMiddleware
+from api.config.logging_config import setup_logging
+
+setup_logging()
+
 app = FastAPI()
 
 app.add_middleware(
