@@ -4,6 +4,7 @@ from tools.test_tools import hello
 from tools.policy_tools import search_gratuity_policy, search_leave_policy
 from tools.employee_tools import (
     get_employee_by_id,
+    get_employee_details,
     get_all_employees
 )
 from tools.leave_tools import (
@@ -30,6 +31,7 @@ class ToolExecutor:
             TOOLS = {
             "hello": hello,
             "get_employee_by_id": get_employee_by_id,
+            "get_employee_details": get_employee_details,
             "get_all_employees": get_all_employees,
             "get_leave_balance_by_id": get_leave_balance_by_id,
             "get_all_leave_balances": get_all_leave_balances,

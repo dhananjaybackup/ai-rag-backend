@@ -11,7 +11,7 @@ class EmployeeService:
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT Id, Name, EmployeeCode, Email, Password, Role FROM Employee WHERE Email = ?", (email,)
+            "SELECT Id, Name, EmployeeCode, Email, Password, Role, ManagerId FROM Employee WHERE Email = ?", (email,)
         )
         row = cursor.fetchone()
         conn.close()
@@ -23,7 +23,8 @@ class EmployeeService:
                 "empcode": row[2],
                 "email": row[3],
                 "password": row[4],
-                "role": row[5]
+                "role": row[5],
+                "managerId": row[6]    
             }
         return None
     
@@ -34,8 +35,8 @@ class EmployeeService:
             hashed = hash_password(employee.password)
             print(f"Registering employee: {employee.name}, Email: {employee.email}, Hashed Password: {hashed}") 
             cursor.execute(
-                "INSERT INTO Employee (Name, EmployeeCode, Email, Password, Role) VALUES (?, ?, ?, ?, ?)",
-                (employee.name, employee.empcode, employee.email, hashed, employee.role),
+                "INSERT INTO Employee (Name, EmployeeCode, Email, Password, Role, ManagerId) VALUES (?, ?, ?, ?, ?, ?)",
+                (employee.name, employee.empcode, employee.email, hashed, employee.role, employee.managerId),
             )
             conn.commit()
         except sqlite3.IntegrityError:
