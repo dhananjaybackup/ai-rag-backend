@@ -3,6 +3,7 @@ import json
 from pyexpat.errors import messages
 from xml.parsers.expat import model
 
+from chromadb import logger
 from httpcore import request
 from openai import models
 
@@ -30,7 +31,9 @@ AUTHENTICATED_TOOLS = {
     "get_employee_by_id",
     "get_leave_balance_by_id",
 }
-loggger = logging.getLogger(__name__)
+MAX_ITERATIONS = 5
+
+# logger = logging.getLogger(__name__)
 
 class AgentService:
     def __init__(self):
@@ -38,8 +41,9 @@ class AgentService:
         self.tool_executor = ToolExecutor()
         self.memory_service = MemoryService()
         self.tool_router = ToolRouter()
+        self.logger = logging.getLogger(__name__)
         # logging.basicConfig(level=logging.INFO)
-        loggger.info("Agent service initialized.")
+        # self.logger.info("Agent service initialized.")
 
     def chat1(self, user_message):
         # Process the request using the LLM service
@@ -177,20 +181,20 @@ class AgentService:
                 arguments = arguments or {}    
                 print(f"Selected Tool: {tool_call.function.name}")
                 print(f"Arguments from LLM: {arguments}")
-                logger.info(f"Selected Tool: {tool_call.function.name}")
-                logger.info(f"Arguments from LLM: {arguments}")
-                logger.info(f"Final Arguments: {arguments}")
+                self.logger.info(f"Selected Tool: {tool_call.function.name}")
+                self.logger.info(f"Arguments from LLM: {arguments}")
+                self.logger.info(f"Final Arguments: {arguments}")
                 # print("Arguments:", )
                 if tool_call.function.name in AUTHENTICATED_TOOLS:
                     arguments["employee_id"] = request.employeeId
 
                     print("Final Arguments:", arguments)
-                    logger.info(f"Final Arguments: {arguments}")
+                    self.logger.info(f"Final Arguments: {arguments}")
 
 
                 tool_result = self.tool_executor.execute(tool_call.function.name, arguments)
                 print("Tool Result:", tool_result)
-                logger.info(f"Tool Result: {tool_result}")
+                self.logger.info(f"Tool Result: {tool_result}")
                 # messages.append(assistant_message)
                 messages.append(
                 {
@@ -221,7 +225,6 @@ class AgentService:
         return {
     "response": final_answer
     }
-
     def chatAgentLoop(self, request: ChatRequest):
         messages = [
             {
@@ -241,15 +244,16 @@ class AgentService:
         )
         question = request.message.lower()
         employee_id = request.employeeId
+        iteration = 0
 
         print(f"Employee ID: {employee_id}, Question: {question}")
-        logger = logging.getLogger(__name__)
-        logger.info(f"Employee ID: {employee_id}, Question: {question}")
+        self.logger.info(f"Employee ID: {employee_id}, Question: {question}")
         
 
         tools = self.tool_router.get_tools(question)
-        while True:
-
+        while iteration < MAX_ITERATIONS:
+            iteration += 1
+            self.logger.info(f"=== Agent Iteration {iteration} ===")
             response = self.llm_service.first_call(messages, tools)
             assistant_message = response.choices[0].message
             final_answer = ""
@@ -262,11 +266,10 @@ class AgentService:
                     "content": assistant_message.content
                 })
                 final_answer = assistant_message.content
-                logger.info("No tool required")
+                self.logger.info("No tool required")
                 break
             else:
-       
-                logger.info("Reached CASE 2")
+                self.logger.info( "Tool call(s) requested by LLM.")
                 messages.append(assistant_message)
                 for tool_call in assistant_message.tool_calls:
                     raw_arguments = tool_call.function.arguments
@@ -275,17 +278,20 @@ class AgentService:
                     except json.JSONDecodeError:
                         arguments = {}
                     arguments = arguments or {}    
-                    logger.info(f"Selected Tool: {tool_call.function.name}")
-                    logger.info(f"Arguments from LLM: {arguments}")
+                    self.logger.info(f"Selected Tool: {tool_call.function.name}")
+                    self.logger.info(f"Arguments from LLM: {arguments}")
                     # print("Arguments:", )
                     if tool_call.function.name in AUTHENTICATED_TOOLS:
                         arguments["employee_id"] = request.employeeId
 
-                        logger.info(f"Final Arguments: {arguments}")
-
-                    tool_result = self.tool_executor.execute(tool_call.function.name, arguments)
+                        self.logger.info(f"Final Arguments: {arguments}")
+                    try:
+                        tool_result = self.tool_executor.execute(tool_call.function.name, arguments)    
+                    except Exception as e:
+                        self.logger.error(f"Error executing tool {tool_call.function.name}: {e}")
+                        tool_result = {"error": str(e)}
                     print("Tool Result:", tool_result)
-                    logger.info(f"Tool Result: {tool_result}")
+                    self.logger.info(f"Tool Result: {tool_result}")
                 # messages.append(assistant_message)
                     messages.append(
                     {
@@ -293,8 +299,14 @@ class AgentService:
                     "tool_call_id": tool_call.id,
                     "content": json.dumps(tool_result)
                     })
-              
-          
+        else:
+            self.logger.warning(
+                "Agent reached maximum iterations."
+            )
+            final_answer = (
+                "I'm sorry, I couldn't complete your request."
+            )      
+        self.logger.info(f"Agent completed in {iteration} iterations")
             # final_answer = response.choices[0].message.content
 
         self.memory_service.save_message(

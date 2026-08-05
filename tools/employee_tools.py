@@ -7,9 +7,12 @@ def get_employee_by_id(employee_id):
     conn.close()
     if employee:
         return {
-            "Id": employee[0],
-            "Name": employee[1],
-            "EmployeeCode": employee[2]
+            "employee_id": employee[0],
+            "name": employee[1],
+            "employee_code": employee[2],
+            "email": employee[3],
+            "role": employee[4],
+            "manager_id": employee[6]
         }
     else:
         return None
@@ -22,12 +25,12 @@ def get_employee_details(employee_id: int):
     conn.close()
     if employee:
         return {
-            "Id": employee[0],
-            "Name": employee[1],
-            "EmployeeCode": employee[2],
-            "Email": employee[3],
-            "Role": employee[5],
-            "ManagerId": employee[6]
+            "employee_id": employee[0],
+            "name": employee[1],
+            "employee_code": employee[2],
+            "email": employee[3],
+            "role": employee[4],
+            "manager_id": employee[6]
         }
     else:
         return None

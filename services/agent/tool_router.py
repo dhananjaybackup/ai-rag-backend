@@ -13,7 +13,17 @@ EMPLOYEE_KEYWORDS = [
     "profile",
     "who am i",
     "my details",
-    "my code"
+    "my code",
+
+    # Manager
+    "manager",
+    "my manager",
+    "manager details",
+    "reporting manager",
+    "boss",
+    "supervisor",
+    "report to",
+    "lead"
 ]
 LEAVE_KEYWORDS = [
     "leave",
